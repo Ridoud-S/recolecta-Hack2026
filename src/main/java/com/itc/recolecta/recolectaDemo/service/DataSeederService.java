@@ -17,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Configuration
 @RequiredArgsConstructor
@@ -229,6 +230,17 @@ public class DataSeederService {
 
                 log.info("✅ Ruta {} cargada con {} posiciones",
                         routeId, positions.size());
+            }
+
+            // Asignar camioneros a rutas en orden
+            List<Usuario> camionerosList = usuarioRepository.findAllByRol(Rol.CAMIONERO);
+            List<Ruta> todasLasRutas = rutaRepository.findAll();
+            for (int i = 0; i < Math.min(camionerosList.size(), todasLasRutas.size()); i++) {
+                Ruta r = todasLasRutas.get(i);
+                r.setCamionero(camionerosList.get(i));
+                rutaRepository.save(r);
+                log.info("🔗 Camionero {} asignado a ruta {}",
+                        camionerosList.get(i).getNombre(), r.getRouteId());
             }
 
         } catch (Exception e) {

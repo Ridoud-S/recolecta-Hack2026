@@ -14,6 +14,10 @@ import com.itc.recolecta.recolectaDemo.repository.ZonaCoberturaRepository;
 import com.itc.recolecta.recolectaDemo.service.GeocodificacionService.Coordenadas;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,6 +60,10 @@ public class DomicilioService {
         // Buscar zona de cobertura por colonia
         ZonaCobertura zona = buscarZonaCobertura(request.getColonia());
 
+        // Crear Point para PostGIS
+        GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
+        Point puntoUbicacion = geometryFactory.createPoint(new Coordinate(coordenadas.lng(), coordenadas.lat()));
+
         // Crear domicilio
         Domicilio domicilio = Domicilio.builder()
                 .usuario(usuario)
@@ -63,8 +71,7 @@ public class DomicilioService {
                 .calle(request.getCalle())
                 .colonia(request.getColonia())
                 .codigoPostal(request.getCodigoPostal())
-                .lat(coordenadas.lat())
-                .lng(coordenadas.lng())
+                .ubicacion(puntoUbicacion)
                 .zonaCobertura(zona)
                 .build();
 
@@ -151,8 +158,8 @@ public class DomicilioService {
                 .calle(domicilio.getCalle())
                 .colonia(domicilio.getColonia())
                 .codigoPostal(domicilio.getCodigoPostal())
-                .lat(domicilio.getLat())
-                .lng(domicilio.getLng())
+                .lat(domicilio.getUbicacion() != null ? domicilio.getUbicacion().getY() : null)
+                .lng(domicilio.getUbicacion() != null ? domicilio.getUbicacion().getX() : null)
                 .zonaCobertura(domicilio.getZonaCobertura() != null
                         ? domicilio.getZonaCobertura().getNombreColonia()
                         : "Sin zona asignada")

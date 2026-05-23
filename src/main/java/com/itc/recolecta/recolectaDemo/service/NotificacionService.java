@@ -5,6 +5,7 @@ import com.itc.recolecta.recolectaDemo.entity.*;
 import com.itc.recolecta.recolectaDemo.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -85,7 +86,8 @@ public class NotificacionService {
             // Enviar FCM si tiene token
             if (usuario.getFcmToken() != null &&
                     !usuario.getFcmToken().isEmpty()) {
-                enviarFCM(usuario.getFcmToken(), titulo, cuerpo);
+                boolean isSilent = ruta.getEsNocturna() != null ? ruta.getEsNocturna() : false;
+                enviarPushAFirebase(usuario.getFcmToken(), titulo, cuerpo, isSilent);
             } else {
                 log.debug("Usuario {} sin FCM token, solo log guardado",
                         usuario.getEmail());
@@ -97,10 +99,11 @@ public class NotificacionService {
     }
 
     // ===== ENVIAR FCM =====
-    private void enviarFCM(String fcmToken, String titulo, String cuerpo) {
+    @Async("taskExecutor")
+    public void enviarPushAFirebase(String fcmToken, String titulo, String cuerpo, boolean isSilent) {
         // Por ahora solo log, Firebase se configura al final
         // Cuando tengamos FirebaseConfig esto se activa
-        log.info("📱 FCM → titulo: '{}' | cuerpo: '{}'", titulo, cuerpo);
+        log.info("📱 FCM → titulo: '{}' | cuerpo: '{}' | silent: {}", titulo, cuerpo, isSilent);
 
         /* Código real con Firebase — activar cuando tengamos credentials:
         try {

@@ -117,4 +117,29 @@ public class CombustibleService {
                 .map(ruta -> obtenerStatusRuta(ruta.getRouteId()))
                 .toList();
     }
+
+    // ===== VERIFICAR DISCREPANCIA (PREVENCIÓN DE FRAUDE) =====
+    public void verificarDiscrepanciaCombustible(String routeId, double litrosSolicitados) {
+        Ruta ruta = rutaRepository.findByRouteId(routeId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Ruta no encontrada: " + routeId
+                ));
+
+        double litrosTeoricos = calcularCombustible(routeId);
+        
+        // Tolerancia del 15% (por tráfico, paradas, etc.)
+        double maxTolerancia = litrosTeoricos * 1.15;
+
+        if (litrosSolicitados > maxTolerancia) {
+            log.warn("🚨 ALERTA DE FRAUDE: Ruta {} solicitó {}L, pero el teórico es {}L (Max permitido {}L)", 
+                    routeId, litrosSolicitados, litrosTeoricos, maxTolerancia);
+            ruta.setFraudeSospechoso(true);
+            rutaRepository.save(ruta);
+        } else {
+            log.info("✅ Combustible validado para ruta {}: {}L solicitados, {}L teóricos", 
+                    routeId, litrosSolicitados, litrosTeoricos);
+            ruta.setFraudeSospechoso(false);
+            rutaRepository.save(ruta);
+        }
+    }
 }

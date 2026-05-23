@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
+import com.google.common.util.concurrent.RateLimiter;
 
 @Service
 @RequiredArgsConstructor
@@ -22,11 +23,15 @@ public class GeocodificacionService {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
+    // Límite de 0.9 peticiones por segundo para Nominatim
+    private final RateLimiter rateLimiter = RateLimiter.create(0.9);
+
     // Coordenadas resultado
     public record Coordenadas(Double lat, Double lng) {}
 
     // ===== GEOCODIFICAR DIRECCIÓN ONE-TIME =====
     public Coordenadas geocodificar(String calle, String colonia, String ciudad) {
+        rateLimiter.acquire(); // Bloquea si excede el límite
         try {
             String direccion = calle + ", " + colonia + ", " + ciudad + ", México";
 

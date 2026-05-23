@@ -123,6 +123,7 @@ public class GamificacionService {
         int puntosCalificacion = 0;
         if (calificacion == 5) puntosCalificacion = PUNTOS_CALIFICACION_5;
         else if (calificacion == 4) puntosCalificacion = PUNTOS_CALIFICACION_4;
+        else if (calificacion < 3) puntosCalificacion = -50; // Penalización por mal servicio
 
         puntos.setPuntosTotales(puntos.getPuntosTotales() + puntosCalificacion);
         puntosOperadorRepository.save(puntos);

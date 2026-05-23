@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.cache.annotation.Cacheable;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -30,6 +31,7 @@ public class ETAService {
             DateTimeFormatter.ofPattern("HH:mm");
 
     // ===== OBTENER ETA DE UN DOMICILIO =====
+    @Cacheable(value = "etas", key = "#domicilioId")
     public ETAResponse obtenerETA(Long domicilioId) {
         Usuario usuario = getUsuarioAutenticado();
 
@@ -105,7 +107,8 @@ public class ETAService {
         // Distancia del camión al domicilio
         double distanciaKm = geocodificacionService.calcularDistanciaKm(
                 posActual.getLat(), posActual.getLng(),
-                domicilio.getLat(), domicilio.getLng()
+                domicilio.getUbicacion() != null ? domicilio.getUbicacion().getY() : 0.0,
+                domicilio.getUbicacion() != null ? domicilio.getUbicacion().getX() : 0.0
         );
 
         // Velocidad promedio estimada 20 km/h en zona urbana

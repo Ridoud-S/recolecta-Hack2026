@@ -12,6 +12,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.cache.annotation.CacheEvict;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -32,6 +33,7 @@ public class SimuladorService {
     // ===== SCHEDULER: Avanza posición cada 30 segundos =====
     @Scheduled(fixedRateString = "${app.simulation.interval-ms:30000}")
     @Transactional
+    @CacheEvict(value = "etas", allEntries = true)
     public void avanzarRutas() {
         // Solo rutas activas
         List<EstadoRutaActual> rutasActivas = estadoRutaRepository
@@ -47,6 +49,28 @@ public class SimuladorService {
 
         for (EstadoRutaActual estado : rutasActivas) {
             procesarAvance(estado);
+        }
+    }
+
+    // ===== CRON JOB: DETECTAR RUTAS ABANDONADAS (> 12 hrs) =====
+    @Scheduled(fixedRate = 3600000) // Se ejecuta cada hora
+    @Transactional
+    public void monitorearRutasAbandonadas() {
+        LocalDateTime limite = LocalDateTime.now().minusHours(12);
+        List<EstadoRutaActual> rutasAbandonadas = estadoRutaRepository
+                .findAllByStatusIn(List.of(StatusRuta.EN_RUTA)).stream()
+                .filter(estado -> estado.getUltimaActualizacion() != null && 
+                                  estado.getUltimaActualizacion().isBefore(limite))
+                .toList();
+
+        for (EstadoRutaActual estado : rutasAbandonadas) {
+            log.warn("⚠️ Ruta {} marcada como ANOMALIA (más de 12 horas sin finalizar)", estado.getRuta().getRouteId());
+            estado.setStatus(StatusRuta.ANOMALIA);
+            estadoRutaRepository.save(estado);
+
+            Ruta ruta = estado.getRuta();
+            ruta.setStatus(StatusRuta.ANOMALIA);
+            rutaRepository.save(ruta);
         }
     }
 
@@ -135,6 +159,7 @@ public class SimuladorService {
 
     // ===== ENDPOINT MANUAL PARA DEMO =====
     @Transactional
+    @CacheEvict(value = "etas", allEntries = true)
     public String avanzarManual(String routeId) {
         Ruta ruta = rutaRepository.findByRouteId(routeId)
                 .orElseThrow(() -> new RuntimeException(
@@ -155,6 +180,7 @@ public class SimuladorService {
 
     // ===== REINICIAR RUTA PARA DEMO =====
     @Transactional
+    @CacheEvict(value = "etas", allEntries = true)
     public String reiniciarRuta(String routeId) {
         Ruta ruta = rutaRepository.findByRouteId(routeId)
                 .orElseThrow(() -> new RuntimeException(
@@ -187,6 +213,7 @@ public class SimuladorService {
             case FINALIZADO -> "El servicio ha finalizado por hoy";
             case PAUSADO -> "El camión está pausado temporalmente";
             case CANCELADO -> "El servicio fue cancelado";
+            case ANOMALIA -> "El servicio presenta una anomalía o fue abandonado";
         };
     }
 }
