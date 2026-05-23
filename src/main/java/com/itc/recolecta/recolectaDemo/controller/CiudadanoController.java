@@ -22,6 +22,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 import java.util.List;
 import java.util.Map;
 
@@ -29,6 +33,8 @@ import java.util.Map;
 @RequestMapping("/api/ciudadano")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Ciudadano", description = "Endpoints para los usuarios ciudadanos")
+@SecurityRequirement(name = "bearerAuth")
 public class CiudadanoController {
 
     private final DomicilioService domicilioService;
@@ -39,6 +45,7 @@ public class CiudadanoController {
     private final RutaRepository rutaRepository;
 
     // ===== POST /api/ciudadano/domicilios → registrar domicilio =====
+    @Operation(summary = "Registrar domicilio", description = "Añade una nueva dirección o punto de recolección para el ciudadano.")
     @PostMapping("/domicilios")
     public ResponseEntity<ApiResponse<DomicilioResponse>> registrarDomicilio(
             @Valid @RequestBody DomicilioRequest request) {
@@ -51,6 +58,7 @@ public class CiudadanoController {
     }
 
     // ===== GET /api/ciudadano/domicilios → listar mis domicilios =====
+    @Operation(summary = "Listar domicilios", description = "Lista todos los domicilios registrados por el ciudadano.")
     @GetMapping("/domicilios")
     public ResponseEntity<ApiResponse<List<DomicilioResponse>>> listarDomicilios() {
 
@@ -62,6 +70,7 @@ public class CiudadanoController {
     }
 
     // ===== GET /api/ciudadano/domicilios/{id} → obtener domicilio por id =====
+    @Operation(summary = "Obtener domicilio por ID", description = "Obtiene los detalles de un domicilio específico del ciudadano.")
     @GetMapping("/domicilios/{id}")
     public ResponseEntity<ApiResponse<DomicilioResponse>> obtenerDomicilio(
             @PathVariable Long id) {
@@ -74,6 +83,7 @@ public class CiudadanoController {
     }
 
     // ===== DELETE /api/ciudadano/domicilios/{id} → eliminar domicilio =====
+    @Operation(summary = "Eliminar domicilio", description = "Elimina un domicilio registrado por el ciudadano.")
     @DeleteMapping("/domicilios/{id}")
     public ResponseEntity<ApiResponse<Void>> eliminarDomicilio(
             @PathVariable Long id) {
@@ -86,6 +96,7 @@ public class CiudadanoController {
     }
 
     // ===== GET /api/ciudadano/eta/{domicilioId} → obtener ETA =====
+    @Operation(summary = "Obtener ETA", description = "Calcula el Tiempo Estimado de Llegada del camión al domicilio proporcionado.")
     @GetMapping("/eta/{domicilioId}")
     public ResponseEntity<ApiResponse<ETAResponse>> obtenerETA(
             @PathVariable Long domicilioId) {
@@ -98,6 +109,7 @@ public class CiudadanoController {
     }
 
     // ===== GET /api/ciudadano/notificaciones → historial últimas 10 =====
+    @Operation(summary = "Historial de notificaciones", description = "Muestra las últimas notificaciones enviadas al ciudadano.")
     @GetMapping("/notificaciones")
     public ResponseEntity<ApiResponse<List<NotificacionResponse>>> obtenerNotificaciones() {
 
@@ -122,6 +134,7 @@ public class CiudadanoController {
     }
 
     // ===== POST /api/ciudadano/calificacion/{rutaId} → calificar servicio =====
+    @Operation(summary = "Calificar servicio", description = "Permite al ciudadano calificar el servicio de recolección en una ruta (1 a 5 estrellas).")
     @PostMapping("/calificacion/{rutaId}")
     public ResponseEntity<ApiResponse<String>> calificarServicio(
             @PathVariable String rutaId,

@@ -26,12 +26,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/camionero")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Camionero", description = "Endpoints para los operadores de camiones")
+@SecurityRequirement(name = "bearerAuth")
 public class CamioneroController {
 
     private final RutaRepository rutaRepository;
@@ -44,6 +50,7 @@ public class CamioneroController {
     private final NotificacionService notificacionService;
 
     // ===== GET /api/camionero/mi-ruta → ver mi ruta asignada =====
+    @Operation(summary = "Ver ruta asignada", description = "Devuelve la información y el estado actual de la ruta asignada al camionero.")
     @GetMapping("/mi-ruta")
     public ResponseEntity<ApiResponse<RutaStatusResponse>> verMiRuta() {
 
@@ -65,6 +72,7 @@ public class CamioneroController {
     }
 
     // ===== POST /api/camionero/ruta/{routeId}/iniciar → iniciar mi ruta =====
+    @Operation(summary = "Iniciar ruta", description = "Inicia el recorrido de la ruta asignada.")
     @PostMapping("/ruta/{routeId}/iniciar")
     public ResponseEntity<ApiResponse<String>> iniciarRuta(
             @PathVariable String routeId) {
@@ -82,6 +90,7 @@ public class CamioneroController {
     }
 
     // ===== POST /api/camionero/ruta/{routeId}/pausar → pausar ruta =====
+    @Operation(summary = "Pausar ruta", description = "Pausa la ruta actual debido a alguna eventualidad o descanso.")
     @PostMapping("/ruta/{routeId}/pausar")
     public ResponseEntity<ApiResponse<String>> pausarRuta(
             @PathVariable String routeId) {
@@ -101,6 +110,7 @@ public class CamioneroController {
     }
 
     // ===== POST /api/camionero/incidencias → reportar incidencia =====
+    @Operation(summary = "Reportar incidencia", description = "Permite al camionero reportar una incidencia durante su ruta.")
     @PostMapping("/incidencias")
     public ResponseEntity<ApiResponse<IncidenciaResponse>> reportarIncidencia(
             @Valid @RequestBody IncidenciaRequest request) {
@@ -144,6 +154,7 @@ public class CamioneroController {
     }
 
     // ===== POST /api/camionero/evaluacion/{routeId} → evaluación al finalizar =====
+    @Operation(summary = "Evaluar ruta (al finalizar)", description = "Permite al camionero evaluar su propia ruta tras finalizarla.")
     @PostMapping("/evaluacion/{routeId}")
     public ResponseEntity<ApiResponse<String>> evaluarRuta(
             @PathVariable String routeId,
@@ -168,6 +179,7 @@ public class CamioneroController {
     }
 
     // ===== GET /api/camionero/mis-stats → ver mis puntos y badges =====
+    @Operation(summary = "Ver mis estadísticas", description = "Muestra los puntos acumulados y estadísticas del camionero (gamificación).")
     @GetMapping("/mis-stats")
     public ResponseEntity<ApiResponse<OperadorStatsResponse>> verMisStats() {
 
@@ -184,6 +196,7 @@ public class CamioneroController {
     }
 
     // ===== GET /api/camionero/mis-badges → ver mis badges =====
+    @Operation(summary = "Ver mis badges", description = "Lista todas las insignias (badges) ganadas por el camionero.")
     @GetMapping("/mis-badges")
     public ResponseEntity<ApiResponse<List<BadgeResponse>>> verMisBadges() {
 

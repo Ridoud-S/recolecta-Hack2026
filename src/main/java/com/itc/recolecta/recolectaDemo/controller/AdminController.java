@@ -16,6 +16,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,6 +29,8 @@ import java.util.Map;
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Administrador", description = "Endpoints para el dashboard administrativo")
+@SecurityRequirement(name = "bearerAuth")
 public class AdminController {
 
     private final SimuladorService simuladorService;
@@ -34,6 +40,7 @@ public class AdminController {
     private final IncidenciaRepository incidenciaRepository;
 
     // ===== GET /api/admin/dashboard → DashboardAdminResponse completo =====
+    @Operation(summary = "Obtener dashboard", description = "Devuelve métricas globales, camiones activos y top operadores.")
     @GetMapping("/dashboard")
     public ResponseEntity<ApiResponse<DashboardAdminResponse>> getDashboard() {
 
@@ -90,6 +97,7 @@ public class AdminController {
     }
 
     // ===== GET /api/admin/rutas → listar todas las rutas con status =====
+    @Operation(summary = "Listar rutas", description = "Lista todas las rutas y su estado actual.")
     @GetMapping("/rutas")
     public ResponseEntity<ApiResponse<List<RutaStatusResponse>>> listarRutas() {
 
@@ -101,6 +109,7 @@ public class AdminController {
     }
 
     // ===== GET /api/admin/rutas/{routeId}/status → status detallado =====
+    @Operation(summary = "Obtener status de ruta", description = "Devuelve el detalle del status de una ruta específica.")
     @GetMapping("/rutas/{routeId}/status")
     public ResponseEntity<ApiResponse<RutaStatusResponse>> statusRuta(
             @PathVariable String routeId) {
@@ -113,6 +122,7 @@ public class AdminController {
     }
 
     // ===== GET /api/admin/rutas/{routeId}/combustible → km, litros y costo =====
+    @Operation(summary = "Obtener datos de combustible", description = "Devuelve los km, litros consumidos y costo de una ruta.")
     @GetMapping("/rutas/{routeId}/combustible")
     public ResponseEntity<ApiResponse<Map<String, Object>>> combustibleRuta(
             @PathVariable String routeId) {
@@ -136,6 +146,7 @@ public class AdminController {
     }
 
     // ===== GET /api/admin/operadores/ranking → ranking mensual =====
+    @Operation(summary = "Ranking de operadores", description = "Muestra la tabla de posiciones (gamificación).")
     @GetMapping("/operadores/ranking")
     public ResponseEntity<ApiResponse<List<RankingOperadorResponse>>> rankingOperadores() {
 
@@ -147,6 +158,7 @@ public class AdminController {
     }
 
     // ===== GET /api/admin/operadores/{id}/stats → stats de un camionero =====
+    @Operation(summary = "Stats de operador", description = "Muestra las estadísticas de un operador específico.")
     @GetMapping("/operadores/{id}/stats")
     public ResponseEntity<ApiResponse<OperadorStatsResponse>> statsOperador(
             @PathVariable Long id) {
@@ -159,6 +171,7 @@ public class AdminController {
     }
 
     // ===== GET /api/admin/incidencias → todas las incidencias =====
+    @Operation(summary = "Listar incidencias", description = "Lista todas las incidencias reportadas en el sistema.")
     @GetMapping("/incidencias")
     public ResponseEntity<ApiResponse<List<IncidenciaResponse>>> listarIncidencias() {
 
@@ -176,6 +189,7 @@ public class AdminController {
     }
 
     // ===== GET /api/admin/incidencias/ruta/{routeId} → incidencias de una ruta =====
+    @Operation(summary = "Incidencias por ruta", description = "Lista las incidencias reportadas en una ruta específica.")
     @GetMapping("/incidencias/ruta/{routeId}")
     public ResponseEntity<ApiResponse<List<IncidenciaResponse>>> incidenciasPorRuta(
             @PathVariable String routeId) {
@@ -200,6 +214,7 @@ public class AdminController {
     }
 
     // ===== POST /api/admin/demo/ruta/{routeId}/avanzar → avanzar ruta =====
+    @Operation(summary = "Avanzar ruta (demo)", description = "Mueve el camión de la ruta a la siguiente posición en el simulador.")
     @PostMapping("/demo/ruta/{routeId}/avanzar")
     public ResponseEntity<ApiResponse<String>> avanzarRuta(
             @PathVariable String routeId) {
@@ -210,6 +225,7 @@ public class AdminController {
     }
 
     // ===== POST /api/admin/demo/ruta/{routeId}/reiniciar → reiniciar ruta =====
+    @Operation(summary = "Reiniciar ruta (demo)", description = "Reinicia la ruta en el simulador para hacer una nueva demostración.")
     @PostMapping("/demo/ruta/{routeId}/reiniciar")
     public ResponseEntity<ApiResponse<String>> reiniciarRuta(
             @PathVariable String routeId) {

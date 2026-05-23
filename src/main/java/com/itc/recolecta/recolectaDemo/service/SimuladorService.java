@@ -76,7 +76,8 @@ public class SimuladorService {
 
     // ===== PROCESAR AVANCE DE UNA RUTA =====
     @Transactional
-    private void procesarAvance(EstadoRutaActual estado) {
+    protected void procesarAvance(EstadoRutaActual estado) //debe ser procted para ser llamado desde el endpoint manual
+    {
         Ruta ruta = estado.getRuta();
         int posicionActual = estado.getPositionIdActual();
         int totalPosiciones = posicionRutaRepository.countByRuta(ruta);
