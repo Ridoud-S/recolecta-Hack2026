@@ -31,4 +31,16 @@ public class Ruta {
     @OneToOne
     @JoinColumn(name = "camion_id")
     private Camion camion;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "camionero_id")
+    private Usuario camionero;
+
+    @Column(name = "es_nocturna")
+    @Builder.Default
+    private Boolean esNocturna = false;
+
+    @Column(name = "fraude_sospechoso")
+    @Builder.Default
+    private Boolean fraudeSospechoso = false;
 }

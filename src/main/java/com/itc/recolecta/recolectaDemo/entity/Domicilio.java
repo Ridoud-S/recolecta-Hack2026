@@ -2,6 +2,7 @@ package com.itc.recolecta.recolectaDemo.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.locationtech.jts.geom.Point;
 
 @Entity
 @Table(name = "domicilios")
@@ -33,11 +34,8 @@ public class Domicilio {
     private String codigoPostal;
 
     // Guardado one-time desde Nominatim
-    @Column(nullable = false)
-    private Double lat;
-
-    @Column(nullable = false)
-    private Double lng;
+    @Column(columnDefinition = "geometry(Point,4326)", nullable = false)
+    private Point ubicacion;
 
     // Se asigna al validar el domicilio
     @ManyToOne(fetch = FetchType.LAZY)

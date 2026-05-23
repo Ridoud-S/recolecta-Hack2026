@@ -5,5 +5,6 @@ public enum StatusRuta {
     EN_RUTA,
     PAUSADO,
     FINALIZADO,
-    CANCELADO
+    CANCELADO,
+    ANOMALIA
 }

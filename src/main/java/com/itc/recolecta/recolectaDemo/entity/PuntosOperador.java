@@ -15,6 +15,9 @@ public class PuntosOperador {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Version
+    private Long version;
+
     @OneToOne
     @JoinColumn(name = "camionero_id", nullable = false)
     private Usuario camionero;
