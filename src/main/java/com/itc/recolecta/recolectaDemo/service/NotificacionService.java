@@ -129,14 +129,14 @@ public class NotificacionService {
             String titulo,
             String cuerpo) {
 
-        NotificacionLog log = NotificacionLog.builder()
+        NotificacionLog notificacionLog = NotificacionLog.builder()
                 .usuario(usuario)
                 .tipoEvento(tipoEvento)
                 .titulo(titulo)
                 .cuerpo(cuerpo)
                 .build();
 
-        notificacionLogRepository.save(log);
+        notificacionLogRepository.save(notificacionLog);
     }
 
     // ===== OBTENER HISTORIAL DE NOTIFICACIONES =====

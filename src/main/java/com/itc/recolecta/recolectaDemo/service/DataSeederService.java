@@ -271,18 +271,9 @@ public class DataSeederService {
 
         for (int i = 0; i < Math.min(camioneros.size(), todasLasRutas.size()); i++) {
             Ruta r = todasLasRutas.get(i);
-            try {
-                // Si la entidad Ruta tiene setCamionero
-                r.getClass().getMethod("setCamionero", Usuario.class)
-                        .invoke(r, camioneros.get(i));
-                rutaRepository.save(r);
-                log.info("🔗 {} → {}", camioneros.get(i).getNombre(), r.getRouteId());
-            } catch (NoSuchMethodException e) {
-                log.warn("⚠️  La entidad Ruta no tiene setCamionero, omitiendo asignación");
-                break;
-            } catch (Exception e) {
-                log.error("Error asignando camionero: {}", e.getMessage());
-            }
+            r.setCamionero(camioneros.get(i));
+            rutaRepository.save(r);
+            log.info("🔗 {} → {}", camioneros.get(i).getNombre(), r.getRouteId());
         }
     }
 
