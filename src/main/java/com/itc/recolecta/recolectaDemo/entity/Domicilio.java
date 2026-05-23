@@ -34,7 +34,7 @@ public class Domicilio {
     private String codigoPostal;
 
     // Guardado one-time desde Nominatim
-    @Column(columnDefinition = "geometry(Point,4326)")
+    @Column
     private Point ubicacion;
 
     // Se asigna al validar el domicilio

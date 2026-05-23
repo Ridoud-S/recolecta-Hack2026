@@ -18,7 +18,7 @@ public class PuntosOperador {
     @Version
     private Long version;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "camionero_id", nullable = false)
     private Usuario camionero;
 
