@@ -51,18 +51,27 @@ public class DomicilioService {
         }
 
         // Geocodificar ONE-TIME (nunca más se llama a Nominatim para este domicilio)
-        Coordenadas coordenadas = geocodificacionService.geocodificar(
-                request.getCalle(),
-                request.getColonia(),
-                "Celaya"
-        );
+        Coordenadas coordenadas = null;
+        try {
+            coordenadas = geocodificacionService.geocodificar(
+                    request.getCalle(),
+                    request.getColonia(),
+                    "Celaya"
+            );
+        } catch (Exception e) {
+            log.warn("No se pudo obtener coordenadas para el domicilio {}: {}", request.getCalle(), e.getMessage());
+            // Se guardará sin ubicación temporalmente
+        }
 
         // Buscar zona de cobertura por colonia
         ZonaCobertura zona = buscarZonaCobertura(request.getColonia());
 
         // Crear Point para PostGIS
-        GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
-        Point puntoUbicacion = geometryFactory.createPoint(new Coordinate(coordenadas.lng(), coordenadas.lat()));
+        Point puntoUbicacion = null;
+        if (coordenadas != null) {
+            GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
+            puntoUbicacion = geometryFactory.createPoint(new Coordinate(coordenadas.lng(), coordenadas.lat()));
+        }
 
         // Crear domicilio
         Domicilio domicilio = Domicilio.builder()
