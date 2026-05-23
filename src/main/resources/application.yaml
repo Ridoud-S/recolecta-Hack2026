@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: recolecta
+  profiles:
+    active: ${SPRING_PROFILE:dev}
