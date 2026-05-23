@@ -34,6 +34,6 @@ public interface DomicilioRepository extends JpaRepository<Domicilio, Long> {
     """)
     List<Domicilio> findAllByRutaId(@Param("rutaId") Long rutaId);
 
-    @Query("SELECT d FROM Domicilio d WHERE dwithin(d.ubicacion, :punto, :distancia) = true AND d.activo = true")
+    @Query("SELECT d FROM Domicilio d WHERE distance(d.ubicacion, :punto) <= :distancia AND d.activo = true")
     List<Domicilio> findNearbyDomicilios(@Param("punto") Point punto, @Param("distancia") double distancia);
 }
