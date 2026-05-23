@@ -33,22 +33,31 @@ public class AuthService {
     @Transactional
     public AuthResponse register(RegisterRequest request) {
 
-        // Validar email duplicado
-        if (usuarioRepository.existsByEmail(request.getEmail())) {
-            throw new BusinessException("El email ya está registrado");
+        // Validar que venga al menos email o teléfono
+        boolean tieneEmail    = request.getEmail() != null && !request.getEmail().isBlank();
+        boolean tieneTelefono = request.getTelefono() != null && !request.getTelefono().isBlank();
+
+        if (!tieneEmail && !tieneTelefono) {
+            throw new BusinessException("Debes proporcionar un email o un teléfono para registrarte");
         }
 
-        // Validar teléfono duplicado si viene
-        if (request.getTelefono() != null &&
-                usuarioRepository.existsByTelefono(request.getTelefono())) {
+        // Validar duplicados
+        if (tieneEmail && usuarioRepository.existsByEmail(request.getEmail())) {
+            throw new BusinessException("El email ya está registrado");
+        }
+        if (tieneTelefono && usuarioRepository.existsByTelefono(request.getTelefono())) {
             throw new BusinessException("El teléfono ya está registrado");
         }
+
+        // Determinar el identificador principal (usado como subject en el JWT)
+        // Preferimos email cuando está disponible; si no, usamos el teléfono.
+        String principalIdentifier = tieneEmail ? request.getEmail() : request.getTelefono();
 
         // Crear usuario
         Usuario usuario = Usuario.builder()
                 .nombre(request.getNombre())
-                .email(request.getEmail())
-                .telefono(request.getTelefono())
+                .email(tieneEmail ? request.getEmail() : null)
+                .telefono(tieneTelefono ? request.getTelefono() : null)
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .rol(request.getRol())
                 .build();
@@ -56,11 +65,8 @@ public class AuthService {
         usuarioRepository.save(usuario);
 
         // Generar tokens
-        String accessToken = jwtUtil.generateToken(
-                usuario.getEmail(),
-                usuario.getRol().name()
-        );
-        String refreshToken = jwtUtil.generateRefreshToken(usuario.getEmail());
+        String accessToken  = jwtUtil.generateToken(principalIdentifier, usuario.getRol().name());
+        String refreshToken = jwtUtil.generateRefreshToken(principalIdentifier);
 
         // Guardar refresh token
         saveRefreshToken(usuario, refreshToken);
@@ -78,29 +84,30 @@ public class AuthService {
     @Transactional
     public AuthResponse login(LoginRequest request) {
 
-        // Spring Security valida credenciales
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
-                )
-        );
+        // Resolver el usuario por email o teléfono
+        String identifier = request.getIdentifier().trim();
+        Usuario usuario   = resolveUsuario(identifier);
 
-        Usuario usuario = usuarioRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new BusinessException("Usuario no encontrado"));
-
+        // Validar estado
         if (!usuario.getActivo()) {
             throw new BusinessException("Usuario inactivo, contacta al administrador");
         }
 
-        // Generar tokens
-        String accessToken = jwtUtil.generateToken(
-                usuario.getEmail(),
-                usuario.getRol().name()
-        );
-        String refreshToken = jwtUtil.generateRefreshToken(usuario.getEmail());
+        // Validar contraseña manualmente (Spring Security usa email como username;
+        // cuando el usuario se registró solo con teléfono el AuthenticationManager
+        // no lo encontraría, así que validamos directo contra el hash).
+        if (!passwordEncoder.matches(request.getPassword(), usuario.getPasswordHash())) {
+            throw new BusinessException("Credenciales inválidas");
+        }
 
-        // Eliminar refresh tokens anteriores y guardar nuevo
+        // Determinar el identificador principal para el JWT
+        String principalIdentifier = usuario.getEmail() != null ? usuario.getEmail() : usuario.getTelefono();
+
+        // Generar tokens
+        String accessToken  = jwtUtil.generateToken(principalIdentifier, usuario.getRol().name());
+        String refreshToken = jwtUtil.generateRefreshToken(principalIdentifier);
+
+        // Rotar refresh token
         refreshTokenRepository.deleteByUsuario(usuario);
         saveRefreshToken(usuario, refreshToken);
 
@@ -133,13 +140,11 @@ public class AuthService {
         }
 
         Usuario usuario = storedToken.getUsuario();
+        String principalIdentifier = usuario.getEmail() != null ? usuario.getEmail() : usuario.getTelefono();
 
         // Generar nuevo access token
-        String newAccessToken = jwtUtil.generateToken(
-                usuario.getEmail(),
-                usuario.getRol().name()
-        );
-        String newRefreshToken = jwtUtil.generateRefreshToken(usuario.getEmail());
+        String newAccessToken  = jwtUtil.generateToken(principalIdentifier, usuario.getRol().name());
+        String newRefreshToken = jwtUtil.generateRefreshToken(principalIdentifier);
 
         // Rotar refresh token
         refreshTokenRepository.delete(storedToken);
@@ -161,7 +166,22 @@ public class AuthService {
                 .ifPresent(refreshTokenRepository::delete);
     }
 
-    // ===== HELPER =====
+    // ===== HELPERS =====
+
+    /**
+     * Detecta si el identificador es un email (contiene '@') o un teléfono,
+     * y busca el usuario correspondiente en la base de datos.
+     */
+    private Usuario resolveUsuario(String identifier) {
+        if (identifier.contains("@")) {
+            return usuarioRepository.findByEmail(identifier)
+                    .orElseThrow(() -> new BusinessException("Usuario no encontrado"));
+        } else {
+            return usuarioRepository.findByTelefono(identifier)
+                    .orElseThrow(() -> new BusinessException("Usuario no encontrado"));
+        }
+    }
+
     private void saveRefreshToken(Usuario usuario, String token) {
         RefreshToken refreshToken = RefreshToken.builder()
                 .usuario(usuario)

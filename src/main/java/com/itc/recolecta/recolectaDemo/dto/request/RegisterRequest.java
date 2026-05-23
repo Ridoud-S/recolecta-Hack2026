@@ -13,8 +13,10 @@ public class RegisterRequest {
     @NotBlank(message = "El nombre es obligatorio")
     private String nombre;
 
+    // Email y teléfono son opcionales individualmente,
+    // pero la validación de que al menos uno esté presente
+    // se hace en AuthService.register()
     @Email(message = "Email inválido")
-    @NotBlank(message = "El email es obligatorio")
     private String email;
 
     private String telefono;

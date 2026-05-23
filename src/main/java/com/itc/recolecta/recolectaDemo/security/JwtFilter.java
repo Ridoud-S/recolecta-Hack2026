@@ -44,11 +44,12 @@ public class JwtFilter extends OncePerRequestFilter {
             return;
         }
 
-        final String email = jwtUtil.extractEmail(token);
+        // El subject puede ser email o teléfono según cómo se registró el usuario
+        final String identifier = jwtUtil.extractEmail(token);
 
         // Si ya hay autenticación en el contexto no hacemos nada
-        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+        if (identifier != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            UserDetails userDetails = userDetailsService.loadUserByUsername(identifier);
 
             UsernamePasswordAuthenticationToken authToken =
                     new UsernamePasswordAuthenticationToken(

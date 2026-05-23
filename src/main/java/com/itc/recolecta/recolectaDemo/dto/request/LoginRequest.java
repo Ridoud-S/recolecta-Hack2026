@@ -7,8 +7,12 @@ import lombok.Data;
 @Data
 public class LoginRequest {
 
-    @NotBlank(message = "El email es obligatorio")
-    private String email;
+    /**
+     * Puede ser un email (ej: "juan@gmail.com") o un teléfono (ej: "5551234567").
+     * El servicio detecta automáticamente cuál es.
+     */
+    @NotBlank(message = "El email o teléfono es obligatorio")
+    private String identifier;
 
     @NotBlank(message = "La contraseña es obligatoria")
     private String password;
