@@ -6,11 +6,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ETAResponse {
+public class ETAResponse implements Serializable {
     private String routeId;
     private String nombreRuta;
     private String mensaje;
