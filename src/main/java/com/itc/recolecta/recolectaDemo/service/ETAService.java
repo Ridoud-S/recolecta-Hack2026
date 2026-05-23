@@ -105,11 +105,20 @@ public class ETAService {
                 ));
 
         // Distancia del camión al domicilio
-        double distanciaKm = geocodificacionService.calcularDistanciaKm(
-                posActual.getLat(), posActual.getLng(),
-                domicilio.getUbicacion() != null ? domicilio.getUbicacion().getY() : 0.0,
-                domicilio.getUbicacion() != null ? domicilio.getUbicacion().getX() : 0.0
-        );
+        double distanciaKm;
+        if (domicilio.getUbicacion() != null) {
+            distanciaKm = geocodificacionService.calcularDistanciaKm(
+                    posActual.getLat(), posActual.getLng(),
+                    domicilio.getUbicacion().getY(),
+                    domicilio.getUbicacion().getX()
+            );
+        } else {
+            // Si el domicilio no tiene ubicación (falló geocodificación), usar el centro de Celaya
+            distanciaKm = geocodificacionService.calcularDistanciaKm(
+                    posActual.getLat(), posActual.getLng(),
+                    20.52353, -100.8157
+            );
+        }
 
         // Velocidad promedio estimada 20 km/h en zona urbana
         double velocidadPromedio = 20.0;
